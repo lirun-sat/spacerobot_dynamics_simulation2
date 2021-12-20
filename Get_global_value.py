@@ -6,6 +6,7 @@ num_q = gl.get_value('num_q')
 m0 = gl.get_value('m0')
 m = gl.get_value('m')
 
+
 mass = sum(m)+m0
 
 # print(mass)
@@ -39,25 +40,3 @@ SE = gl.get_value('SE')
 S0 = gl.get_value('S0')
 Gravity = gl.get_value('Gravity')
 d_time = gl.get_value('d_time')
-
-branch = gl.get_value('Branch')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,165 +2,80 @@ import Global_Value
 import Set_global_value
 import Get_global_value
 from rpy2dc import rpy2dc
+
 from Get_global_value import d_time
 from Get_global_value import num_q
 import numpy as np
 import math
+from eul2dc import eul2dc
 from dc2rpy import dc2rpy
-from calc_dynamics_rk2 import calc_dynamics_rk2
+from f_dyn_rk2 import f_dyn_rk2
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from calc_aa import calc_aa
+from calc_pos import calc_pos
+from j_num import j_num
+from f_kin_e import f_kin_e
 
 
-q = np.zeros((num_q, 1))
-q_dot = np.zeros((num_q, 1))
-q_dot_dot = np.zeros((num_q, 1))
+q = np.zeros(num_q)
+qd = np.zeros(num_q)
+qdd = np.zeros(num_q)
 
-v_links = np.zeros((num_q, 3, 1))
-w_links = np.zeros((num_q, 3, 1))
-v_links_dot = np.zeros((num_q, 3, 1))
-w_links_dot = np.zeros((num_q, 3, 1))
+vv = np.zeros((num_q, 3))
+ww = np.zeros((num_q, 3))
+vd = np.zeros((num_q, 3))
+wd = np.zeros((num_q, 3))
 
-v_base = np.array([[0], [0], [0]])
-omega_base_in_body = np.array([[0], [0], [0]])
-v_base_dot = np.array([[0], [0], [0]])
-omega_base_dot_in_body = np.array([[0], [0], [0]])
+v0 = np.array([0, 0, 0])
+w0 = np.array([0, 0, 0])
+vd0 = np.array([0, 0, 0])
+wd0 = np.array([0, 0, 0])
 
-base_position = np.array([[0], [0], [0]])
-base_RPY = np.array([0, 0, 0])
+R0 = np.array([0, 0, 0])
+Q0 = np.array([0, 0, 0])
 
-A_base = rpy2dc(base_RPY[0], base_RPY[1], base_RPY[2])
+A0 = rpy2dc(Q0[0], Q0[1], Q0[2])
 
+print(A0)
+# A0 = np.eye(3)
 
-tau = np.zeros((num_q+6, 1))
+Fe = np.zeros((num_q, 3))
+Te = np.zeros((num_q, 3))
+F0 = np.array([0, 0, 0])
+T0 = np.array([0, 0, 0])
 
-
-'''
-qd_tracking = [[], [], [], [], [], []]
-d_qd = [[], [], [], [], [], []]
-dd_qd = [[], [], [], [], [], []]
-'''
-
+tau = np.zeros(num_q)
 
 q1tempt = []
-# v00tempt = []
-# v01tempt = []
-# v02tempt = []
-# w0tempt = []
-#
-# R00_tempt = []
-# R01_tempt = []
-# R02_tempt = []
-#
-# roll_1_tempt = []
-# pitch1_tempt = []
-# yaw_1_tempt = []
-# POS_e1_tempt = []
-#
-#
+qdtempt = []
+v00tempt = []
+v01tempt = []
+v02tempt = []
+w0tempt = []
 
+R00_tempt = []
+R01_tempt = []
+R02_tempt = []
 
+roll_1_tempt = []
+pitch1_tempt = []
+yaw_1_tempt = []
+POS_e1_tempt = []
 
-
-# PID parameters set
-
-
-desired_q = np.array([[0.3], [0.2], [0.1], [0.6], [0.5], [0.4]])
-gain_spring = 10
-gain_dumper = 10
-
-total_steps = 20
-
-
-# qd_tracking_0_tempt = []
-# qd_tracking_1_tempt = []
-# qd_tracking_2_tempt = []
-# qd_tracking_3_tempt = []
-# qd_tracking_4_tempt = []
-# qd_tracking_5_tempt = []
-#
-# q0tempt = []
-# q1tempt = []
-# q2tempt = []
-# q3tempt = []
-# q4tempt = []
-# q5tempt = []
-#
-# d_qd_tempt_0 = []
-# d_qd_tempt_1 = []
-# d_qd_tempt_2 = []
-# d_qd_tempt_3 = []
-# d_qd_tempt_4 = []
-# d_qd_tempt_5 = []
-#
-# dq_tempt_0 = []
-# dq_tempt_1 = []
-# dq_tempt_2 = []
-# dq_tempt_3 = []
-# dq_tempt_4 = []
-# dq_tempt_5 = []
-#
-# dd_qd_tempt_0 = []
-# dd_qd_tempt_1 = []
-# dd_qd_tempt_2 = []
-# dd_qd_tempt_3 = []
-# dd_qd_tempt_4 = []
-# dd_qd_tempt_5 = []
-#
-# ddq_tempt_0 = []
-# ddq_tempt_1 = []
-# ddq_tempt_2 = []
-# ddq_tempt_3 = []
-# ddq_tempt_4 = []
-# ddq_tempt_5 = []
-#
-# tau_tempt_0 = []
-# tau_tempt_1 = []
-# tau_tempt_2 = []
-# tau_tempt_3 = []
-# tau_tempt_4 = []
-# tau_tempt_5 = []
-#
-# F0_tempt = []
-# T0_tempt = []
-#
-# qd_tracking = np.array(num_q)
-# d_qd = np.array(num_q)
-# dd_qd = np.array(num_q)
-#
-# HH = np.zeros((num_q + 6, num_q + 6))
-# dv0 = np.zeros(3)
-# dw0 = np.zeros(3)
-#
-# dv0_tempt = []
-# dw0_tempt = []
-#
-# K_v = 8
-# K_p = 8
-
-
-print('total calculation : %i steps' % (total_steps / d_time))
-
-'''
-for t in np.arange(0, total_steps, d_time):
-    qd_tracking[0].append(0.6 * math.sin(t))
-    qd_tracking[1].append(0.4 * math.sin(t))
-    qd_tracking[2].append(0.2 * math.sin(t))
-    qd_tracking[3].append(0.1 * math.sin(t))
-    qd_tracking[4].append(0.8 * math.cos(t))
-    qd_tracking[5].append(0.6 * math.cos(t))
-
-
-for i in np.arange(1, len(qd_tracking[0]), 1):
-    for j in range(0, len(qd_tracking), 1):
-        d_qd[j].append((qd_tracking[j][i] - qd_tracking[j][i-1]) / d_time)
-
-
-for i in np.arange(1, len(d_qd[0]), 1):
-    for j in range(0, len(d_qd), 1):
-        dd_qd[j].append((d_qd[j][i] - d_qd[j][i-1]) / d_time)
-'''
+tau_tempt = []
+A0_tempt = []
 
 timetempt = []
+
+# PID parameters set
+desired_q = np.array([0.3, 0.2, 0.1, 0.6, 0.5, 0.4])
+gain_spring = 10
+gain_dumper = 10
+total_steps = 40
+print('total calculation : %i steps' % (total_steps / d_time))
+
 for time in np.arange(0, total_steps, d_time):
 
     timetempt.append(time)
@@ -175,102 +90,43 @@ for time in np.arange(0, total_steps, d_time):
     elif time == 50:
         print('5000 steps of calculation completed! Please wait~')
 
-    tau[0:6, :] = np.zeros((6, 1))
-    tau[6:num_q+6, :] = gain_spring * (desired_q - q) - gain_dumper * q_dot
+    tau = gain_spring * (desired_q - q) - gain_dumper * qd
 
-    # tau = np.expand_dims(tau, axis=0)
-    #tau = tau.T
+    R0, A0, v0, w0, q, qd = f_dyn_rk2(R0, A0, v0, w0, q, qd, F0, T0, Fe, Te, tau)
 
+    roll_1, pitch1, yaw_1, roll_2, pitch2, yaw_2 = dc2rpy(A0)
 
-    # qd_tracking = np.array([0.6 * math.sin(time), 0.4 * math.sin(time), 0.2 * math.sin(time), 0.1 * math.sin(time), 0.8 * math.cos(time), 0.6 * math.cos(time)])
+    '''
+     AA = calc_aa(A0, q)
+    RR = calc_pos(R0, A0, AA, q)
 
-    # d_qd = np.array([0.6 * math.cos(time), 0.4 * math.cos(time), 0.2 * math.cos(time), 0.1 * math.cos(time), -0.8 * math.sin(time), -0.6 * math.sin(time)])
+    joints = j_num(0)
+    POS_e1, ORI_e1 = f_kin_e(RR, AA, joints)
 
-    # dd_qd = np.array([-0.6 * math.sin(time), -0.4 * math.sin(time), -0.2 * math.sin(time), -0.1 * math.sin(time), -0.8 * math.cos(time), -0.6 * math.cos(time)])
+    POS_e1_tempt.append(POS_e1)
 
-    # desire_dv0 = dv0
-    # desire_dw0 = dw0
+    # tau_tempt.append(tau)
 
-    # upsilon_phi = dd_qd + K_v * (d_qd - dq) + K_p * (qd_tracking - q)
-    # print(upsilon_phi.shape)
+    # joints = j_num(1)
+    # POS_e2[i, :], ORI_e2[i, :, :] = f_kin_e(RR, AA, joints)
+    '''
 
-    # upsilon_base = np.array([desire_dv0, desire_dw0])  # (2,3)
-    # print(upsilon_base.flatten().shape)
+    qdtempt.append(qd[0])
+    q1tempt.append(q)
+    v00tempt.append(v0[0])
+    v01tempt.append(v0[1])
+    v02tempt.append(v0[2])
 
-    # upsilon_tempt = np.array([upsilon_base.flatten(), upsilon_phi])
-    # upsilon = upsilon_tempt.flatten()
-    # print(upsilon.shape)
+    R00_tempt.append(R0[0])
+    R01_tempt.append(R0[1])
+    R02_tempt.append(R0[2])
 
-    # print(HH.shape)
+    w0tempt.append(w0[0])
+    roll_1_tempt.append(roll_1)
+    pitch1_tempt.append(pitch1)
+    yaw_1_tempt.append(yaw_1)
 
-    # tau = HH @ upsilon + Force0
-
-
-    A_base, base_position, omega_base_in_body, v_base, q, q_dot = calc_dynamics_rk2(A_base, base_position, omega_base_in_body, v_base, q, q_dot, tau)
-
-    q1tempt.append(q[0, :])
-
-
-    # dv0_tempt.append(dv0)
-    # dw0_tempt.append(dw0)
-    #
-    # qd_tracking_0_tempt.append(qd_tracking[0])
-    # qd_tracking_1_tempt.append(qd_tracking[1])
-    # qd_tracking_2_tempt.append(qd_tracking[2])
-    # qd_tracking_3_tempt.append(qd_tracking[3])
-    # qd_tracking_4_tempt.append(qd_tracking[4])
-    # qd_tracking_5_tempt.append(qd_tracking[5])
-    # q5tempt.append(q[num_q - 1])
-    # q4tempt.append(q[num_q - 2])
-    # q3tempt.append(q[num_q - 3])
-    # q2tempt.append(q[num_q - 4])
-    # q1tempt.append(q[num_q - 5])
-    # q0tempt.append(q[num_q - 6])
-    #
-    # d_qd_tempt_0.append(d_qd[num_q - 6])
-    # d_qd_tempt_1.append(d_qd[num_q - 5])
-    # d_qd_tempt_2.append(d_qd[num_q - 4])
-    # d_qd_tempt_3.append(d_qd[num_q - 3])
-    # d_qd_tempt_4.append(d_qd[num_q - 2])
-    # d_qd_tempt_5.append(d_qd[num_q - 1])
-    # dq_tempt_0.append(dq[num_q - 6])
-    # dq_tempt_1.append(dq[num_q - 5])
-    # dq_tempt_2.append(dq[num_q - 4])
-    # dq_tempt_3.append(dq[num_q - 3])
-    # dq_tempt_4.append(dq[num_q - 2])
-    # dq_tempt_5.append(dq[num_q - 1])
-    #
-    # dd_qd_tempt_0.append(dd_qd[num_q - 6])
-    # dd_qd_tempt_1.append(dd_qd[num_q - 5])
-    # dd_qd_tempt_2.append(dd_qd[num_q - 4])
-    # dd_qd_tempt_3.append(dd_qd[num_q - 3])
-    # dd_qd_tempt_4.append(dd_qd[num_q - 2])
-    # dd_qd_tempt_5.append(dd_qd[num_q - 1])
-    # ddq_tempt_0.append(ddq[num_q - 6])
-    # ddq_tempt_1.append(ddq[num_q - 5])
-    # ddq_tempt_2.append(ddq[num_q - 4])
-    # ddq_tempt_3.append(ddq[num_q - 3])
-    # ddq_tempt_4.append(ddq[num_q - 2])
-    # ddq_tempt_5.append(ddq[num_q - 1])
-
-    # F0_tempt.append(tau[0:3])
-    # T0_tempt.append(tau[3:6])
-    #
-    # tau_tempt_0.append(tau[num_q + 0])
-    # tau_tempt_1.append(tau[num_q + 1])
-    # tau_tempt_2.append(tau[num_q + 2])
-    # tau_tempt_3.append(tau[num_q + 3])
-    # tau_tempt_4.append(tau[num_q + 4])
-    # tau_tempt_5.append(tau[num_q + 5])
-
-    # roll_1_tempt.append(roll_1)
-    # pitch1_tempt.append(pitch1)
-    # yaw_1_tempt.append(yaw_1)
-
-plt.plot(timetempt, q1tempt, linewidth=1.0, color='red', linestyle='-.', label='q1tempt')
-plt.grid(True)
-#
-plt.show()
+    A0_tempt.append(A0[0, 0])
 
 # plt.plot(timetempt, POS_e1_tempt, linewidth=1.0, color='red', linestyle='-.', label='POS_e1_tempt')
 # plt.plot(timetempt, q1tempt, linewidth=1.0, color='red', linestyle='-.', label='q1tempt')
@@ -284,42 +140,21 @@ plt.show()
 # plt.plot(timetempt, yaw_1_tempt, linewidth=1.0, label='yaw_1_tempt')
 # plt.plot(timetempt, tau_tempt, linewidth=1.0, color='green', linestyle='-', label='tau_tempt')
 
+plt.plot(timetempt, R00_tempt, linewidth=1.0, label='R00_tempt')
+plt.plot(timetempt, R01_tempt, linewidth=1.0, label='R01_tempt')
+plt.plot(timetempt, R02_tempt, linewidth=1.0, label='R02_tempt')
 
-# plt.plot(timetempt, R00_tempt, linewidth=1.0, label='R00_tempt')
-# plt.plot(timetempt, R01_tempt, linewidth=1.0, label='R01_tempt')
-# plt.plot(timetempt, R02_tempt, linewidth=1.0, label='R02_tempt')
+plt.legend(loc='upper left')
+
+plt.grid(True)
+
+plt.show()
 
 
-# plt.plot(timetempt, qd_tracking_2_tempt, linewidth=1.0, label='qd_tracking_2_tempt')
-#
-# plt.plot(timetempt, q2tempt, linewidth=1.0, label='q2tempt')
-#
-# plt.plot(timetempt, d_qd_tempt_2, linewidth=1.0, label='d_qd_tempt_2')
-#
-# plt.plot(timetempt, dq_tempt_2, linewidth=1.0, label='dq_tempt_2')
-#
-# plt.plot(timetempt, dd_qd_tempt_2, linewidth=1.0, label='dd_qd_tempt_2')
-#
-# plt.plot(timetempt, ddq_tempt_2, linewidth=1.0, label='ddq_tempt_2')
-#
-# plt.plot(timetempt, tau_tempt_2, linewidth=1.0, label='tau_tempt_2')
-#
-# # plt.plot(timetempt, tau_tempt_2, linewidth=1.0, label='tau_tempt_2')
-#
-# # plt.plot(timetempt, q2tempt, linewidth=1.0, label='q2tempt')
-#
-# # plt.plot(timetempt, q1tempt, linewidth=1.0, label='q1tempt')
-# # plt.plot(timetempt, q2tempt, linewidth=1.0, label='q2tempt')
-# # plt.plot(timetempt, q3tempt, linewidth=1.0, label='q3tempt')
-# # plt.plot(timetempt, q4tempt, linewidth=1.0, label='q4tempt')
-# # plt.plot(timetempt, q5tempt, linewidth=1.0, label='q5tempt')
-# # plt.plot(timetempt, q6tempt, linewidth=1.0, label='q6tempt')
-#
-# plt.legend(loc='upper left')
-#
-# plt.grid(True)
-#
-# plt.show()
+
+
+
+
 
 
 '''
@@ -331,6 +166,9 @@ from test4 import ROOT
 print(ROOT)
 
 '''
+
+
+
 
 
 '''
@@ -364,7 +202,7 @@ while i < 2000:
     A0 = eul2dc(phi, theta, psi)
 ###############################################################################################################
     R0 = np.array([0, 0, 0])
-
+    
 
     q = np.random.uniform(-170 / 180 * math.pi, 170 / 180 * math.pi, (6,))
     AA = calc_aa(A0, q)

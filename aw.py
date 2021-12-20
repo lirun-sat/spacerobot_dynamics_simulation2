@@ -4,13 +4,8 @@ from math import sin
 from Get_global_value import d_time
 
 
+# aw( w0 ) returns a 3x3 transformation representing a rotation about the vector w0.
 def aw(omega0):
-    """
-    Function: Rotation matrix from axis(w0) and angle(|w0| * d_time). 
-    :param omega0:
-    :return: The matrix of a proper rotation R by angle θ around the axis u = (ux, uy, uz), a unit vector with ux^2 + uy^2 + uz^2 = 1
-             aw( w0 ) returns a 3x3 transformation representing a rotation about the vector w0.
-    """
     omega0_norm = np.linalg.norm(omega0)
     transform_about_omega0 = np.zeros((3, 3))
     if omega0_norm == 0:

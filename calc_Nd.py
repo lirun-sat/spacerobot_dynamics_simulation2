@@ -1,11 +1,14 @@
 import numpy as np
+import scipy.linalg
 from Get_global_value import num_q
+from Get_global_value import c0
 from Get_global_value import cc
 from Get_global_value import Ez
+from Get_global_value import branch
 from skew_sym import skew_sym
 
 
-def calc_Nd(A_base, A_links):
+def calc_Nd(A_base, R_links):
 
     P_b = np.block([
         [A_base, np.zeros((3, 3))],
@@ -17,9 +20,10 @@ def calc_Nd(A_base, A_links):
     p_i_buff = np.zeros((num_q, 6*(num_q+1), 1))
 
     for i in range(num_q):
-        p_i_omega = A_links[i, :, :] @ Ez  # tuple (3, 1)
-        p_i_linear = skew_sym(A_links[i, :, :] @ Ez) @ (A_links[i, :, :] @ (-np.expand_dims(cc[i, i, :], axis=0).T))
-
+        p_i_omega = R_links[i, :, :] @ Ez
+        p_i_linear = skew_sym(R_links[i, :, :] @ Ez) @ (R_links[i, :, :] @ (-cc[i, i, :]))
+        p_i_omega = np.expand_dims(p_i_omega, axis=0)
+        p_i_linear = np.expand_dims(p_i_linear, axis=0)
         p_i = np.concatenate((p_i_omega, p_i_linear), axis=0)
         p_i_buff_temp = np.concatenate((np.zeros((6*(i+1), 1)), p_i), axis=0)
         p_i_buff[i, :, :] = np.concatenate((p_i_buff_temp, np.zeros((6*(num_q-i-1), 1))), axis=0)
@@ -34,28 +38,5 @@ def calc_Nd(A_base, A_links):
 
     Nd = np.concatenate((P_b, p_i), axis=1)
 
-    # print('Nd.shape', Nd.shape)
-
     return Nd
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

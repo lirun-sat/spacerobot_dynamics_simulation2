@@ -8,9 +8,8 @@ from Get_global_value import inertia0
 from skew_sym import skew_sym
 
 
-def calc_M_and_M_dot(A_base, omega_base_in_body, A_links, A_links_dot):
+def calc_M_and_M_dot(A_base, omega_base, R_links, R_links_dot):
 
-    omega_base = A_base @ omega_base_in_body
     M_tempt = np.zeros((num_q+1, 6, 6))
     M_dot_tempt = np.zeros((num_q+1, 6, 6))
 
@@ -31,14 +30,14 @@ def calc_M_and_M_dot(A_base, omega_base_in_body, A_links, A_links_dot):
 
     for i in range(num_q):
 
-        inertia_i = A_links[i, :, :] @ inertia[i, :, :] @ A_links[i, :, :].T
+        inertia_i = R_links[i, :, :] @ inertia[i, :, :] @ R_links[i, :, :].T
 
         M_tempt[i, :, :] = np.block([
             [inertia_i, np.zeros((3, 3))],
             [np.zeros((3, 3)), m[i] * np.eye(3)]
         ])
 
-        inertia_i_dot = A_links_dot[i, :, :] @ inertia[i, :, :] @ A_links[i, :, :].T + A_links[i, :, :] @ inertia[i, :, :] @ A_links_dot[i, :, :].T
+        inertia_i_dot = R_links_dot[i, :, :] @ inertia[i, :, :] @ R_links[i, :, :].T + R_links[i, :, :] @ inertia[i, :, :] @ R_links_dot[i, :, :].T
 
         M_dot_tempt[i, :, :] = np.block([
             [inertia_i_dot, np.zeros((3, 3))],
@@ -47,6 +46,6 @@ def calc_M_and_M_dot(A_base, omega_base_in_body, A_links, A_links_dot):
 
         M = scipy.linalg.block_diag(M, M_tempt[i, :, :])
 
-        M_dot = scipy.linalg.block_diag(M_dot, M_dot_tempt[i, :, :])
+        M_dot = scipy.linalg.block_diag(M, M_dot_tempt[i, :, :])
 
     return M, M_dot

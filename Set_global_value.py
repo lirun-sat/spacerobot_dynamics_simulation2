@@ -8,7 +8,7 @@ gl._init()
 gl.set_value('num_q', 6)
 gl.set_value('Gravity', np.array([0, 0, 0]))
 gl.set_value('m0', 100)
-gl.set_value('Ez', np.array([[0], [0], [1]]))  # Ez is tuple(3, 1)
+gl.set_value('Ez', np.array([0, 0, 1]))
 gl.set_value('m', np.array([10, 10, 10, 10, 10, 10]))
 gl.set_value('inertia0', np.array([[10, 0, 0],
                                    [0, 10, 0],
@@ -55,8 +55,8 @@ gl.set_value('Branch', np.array([[1, 1, 1, 0, 0, 0],
                                 [0, 0, 0, 1, 1, 1],
                                 [0, 0, 0, 1, 1, 1]]))
 
-# gl.set_value('J_type', ['R', 'R', 'P', 'R', 'R', 'P'])
-gl.set_value('J_type', ['R', 'R', 'R', 'R', 'R', 'R'])
+gl.set_value('J_type', ['R', 'R', 'P', 'R', 'R', 'P'])
+# gl.set_value('J_type', ['R', 'R', 'R', 'R', 'R', 'R'])
 
 gl.set_value('Qi', np.array([[-math.pi/2, 0, 0],
                              [math.pi/2, 0, 0],
@@ -65,53 +65,14 @@ gl.set_value('Qi', np.array([[-math.pi/2, 0, 0],
                              [math.pi/2, 0, 0],
                              [0, 0, 0]]))
 
-gl.set_value('c0', np.array([[[0],
-                              [1],
-                              [0]],
+gl.set_value('c0', np.array([[0, 1, 0], [0, 0, 0], [0, 0, 0], [0, -1, 0], [0, 0, 0], [0, 0, 0]]))
 
-                             [[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [-1],
-                              [0]],
-
-                             [[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [0],
-                              [0]]]))
-
-gl.set_value('ce', np.array([[[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [0.5],
-                              [0]],
-
-                             [[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [0],
-                              [0]],
-
-                             [[0],
-                              [0.5],
-                              [0]]]))
+gl.set_value('ce', np.array([[0, 0, 0],
+                             [0, 0, 0],
+                             [0, 0.5, 0],
+                             [0, 0, 0],
+                             [0, 0, 0],
+                             [0, 0.5, 0]]))
 
 gl.set_value('Qe', np.array([[0, 0, 0],
                              [0, 0, 0],

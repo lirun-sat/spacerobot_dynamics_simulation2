@@ -14,7 +14,7 @@ def calc_Nl_dot(v_base, v_links):
     for i in range(num_q):
         B_b2i_dot_temp[i, :, :] = np.block([
             [np.zeros((3, 3)), np.zeros((3, 3))],
-            [skew_sym(v_links[i, :, :] - v_base).T, np.zeros((3, 3))]
+            [skew_sym(v_links[i, :] - v_base).T, np.zeros((3, 3))]
         ])
 
     B_b2i_dot = np.zeros((6, 6))
@@ -30,7 +30,7 @@ def calc_Nl_dot(v_base, v_links):
             else:
                 B_j2i_dot_temp_temp[j, i, :, :] = np.block([
                     [np.zeros((3, 3)), np.zeros((3, 3))],
-                    [skew_sym(v_links[i, :, :] - v_links[j, :, :]).T, np.zeros((3, 3))]
+                    [skew_sym(v_links[i, :] - v_links[j, :]).T, np.zeros((3, 3))]
                 ])
 
     B_j2i_dot_buff = np.zeros((num_q, 6*(num_q+1), 6))
@@ -55,9 +55,6 @@ def calc_Nl_dot(v_base, v_links):
             B_j2i_dot = np.concatenate((B_j2i_dot, B_j2i_dot_buff[i+1, :, :]), axis=1)
 
     Nl_dot = np.concatenate((B_b2i_dot, B_j2i_dot), axis=1)
-
-    # print('Nl_dot.shape', Nl_dot.shape)
-
 
     # B_b2i_temp = np.expand_dims(B_b2i_temp, axis=0)
     # B_b2i = B_j2i_temp_temp.transpose((1, 0, 2, 3))

@@ -1,10 +1,11 @@
 import numpy as np
+import scipy.linalg
 from Get_global_value import num_q
 from Get_global_value import branch
 from skew_sym import skew_sym
 
 
-def calc_Nl(base_position, links_positions):
+def calc_Nl(R_base, links_positions):
 
     B_b2i_temp = np.zeros((num_q, 6, 6))
     B_j2i_temp_temp = np.zeros((num_q, num_q, 6, 6))
@@ -13,7 +14,7 @@ def calc_Nl(base_position, links_positions):
     for i in range(num_q):
         B_b2i_temp[i, :, :] = np.block([
             [np.eye(3), np.zeros((3, 3))],
-            [skew_sym(links_positions[i, :, :] - base_position[:, :]).T, np.eye(3)]
+            [skew_sym(links_positions[i, :] - R_base).T, np.eye(3)]
         ])
 
     B_b2i = np.eye(6)
@@ -29,7 +30,7 @@ def calc_Nl(base_position, links_positions):
             else:
                 B_j2i_temp_temp[j, i, :, :] = np.block([
                     [np.eye(3), np.zeros((3, 3))],
-                    [skew_sym(links_positions[i, :, :] - links_positions[j, :, :]).T, np.eye(3)]
+                    [skew_sym(links_positions[i, :] - links_positions[j, :]).T, np.eye(3)]
                 ])
 
     B_j2i_buff = np.zeros((num_q, 6*(num_q+1), 6))
@@ -55,8 +56,6 @@ def calc_Nl(base_position, links_positions):
 
     Nl = np.concatenate((B_b2i, B_j2i), axis=1)
 
-    # print('Nl.shape', Nl.shape)
-
     # B_b2i_temp = np.expand_dims(B_b2i_temp, axis=0)
     # B_b2i = B_j2i_temp_temp.transpose((1, 0, 2, 3))
     # B_j2i = B_j2i_temp_temp.transpose((1, 0, 2, 3))
@@ -68,3 +67,14 @@ def calc_Nl(base_position, links_positions):
     # Nl = np.concatenate((Nl_upper_part, Nl_lower_part), axis=0)
 
     return Nl
+
+
+
+
+
+
+
+
+
+
+
